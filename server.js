@@ -14,7 +14,7 @@ app.use((req,res,next)=>{
 })
 
 app.use(express.json());
-
+app.use(express.static('express-server/public'))
 app.use('/',homeRouter);
 app.use('/friends',freindsRouter);
 app.use('/messages',messagesRouter);
