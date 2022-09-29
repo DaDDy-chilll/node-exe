@@ -1,7 +1,8 @@
 const express = require('express');
-const homeRouter = require('./express-server/routes/home.router');
-const freindsRouter = require('./express-server/routes/friends.router');
-const messagesRouter  = require('./express-server/routes/message.router');
+const path = require('path')
+const homeRouter = require('./routes/home.router');
+const freindsRouter = require('./routes/friends.router');
+const messagesRouter  = require('./routes/message.router');
 const app = express();
 const PORT = 3000;
 
@@ -14,7 +15,9 @@ app.use((req,res,next)=>{
 })
 
 app.use(express.json());
-app.use(express.static('express-server/public'))
+app.set('view engine','hbs')
+app.set('views',path.join(__dirname,'views'))
+app.use('/site',express.static(path.join(__dirname,'public')))
 app.use('/',homeRouter);
 app.use('/friends',freindsRouter);
 app.use('/messages',messagesRouter);
