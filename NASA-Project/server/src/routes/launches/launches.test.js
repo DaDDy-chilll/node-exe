@@ -1,3 +1,17 @@
+
+const app = require('../../app')
+const request = require('supertest');
+const {connectMongo,disconnectMongo} = require('../../services/mongo');
+
+describe('Test Launch API',()=>{
+  beforeAll(async ()=>{
+    await connectMongo();
+  });
+  afterAll(async ()=>{
+    await disconnectMongo();
+  })
+  
+  
 describe("Test GET /launches", () => {
   test("It should respond with 200 success", async () => {
     const response = await request(app)
@@ -11,18 +25,18 @@ describe("Test POST /launch", () => {
   const completeLaunchData = {
     mission: "USS Enterprise",
     rocket: "NCC D103-1",
-    target: "Kepler-186 f",
+    target: "Kepler-442 b",
     launchDate: "January 3,2030",
   };
   const launchDataWithoutData = {
     mission: "USS Enterprise",
     rocket: "NCC D103-1",
-    target: "Kepler-186 f",
+    target: "Kepler-442 b",
   };
   const launchDataWithInvalidDate = {
     mission: "USS Enterprise",
     rocket: "NCC D103-1",
-    target: "Kepler-186 f",
+    target: "Kepler-442 b",
     launchDate: "zooo",
   };
   test("It should respond with 201 created", async () => {
@@ -44,7 +58,7 @@ describe("Test POST /launch", () => {
       .expect("Content-Type", /json/)
       .expect(400);
     expect(response.body).toStrictEqual({
-      error: "Missing required launch property",
+      error: "Missing Launch property...",
     });
   });
   test("It should catch ivalid dates", async () => {
@@ -54,7 +68,9 @@ describe("Test POST /launch", () => {
       .expect("Content-Type", /json/)
       .expect(400);
     expect(response.body).toStrictEqual({
-      error: "Invalid launch date",
+      error: "Invalid launch Date...",
     });
   });
 });
+})
+
