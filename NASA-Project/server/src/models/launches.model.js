@@ -1,7 +1,8 @@
 const launchesData = require('./launches.mongo');
 const planets = require('./planets.mongo');
+const DEFAULT_FLIGHTNUMBER = 100;
 // const launches = new Map();
-let latestFlightNumber = 100;
+// let latestFlightNumber = 100;
 const launch = {
     flightNumber:100,
     mission:'Exoplanets IS1',
@@ -18,16 +19,24 @@ async function getAllLaunches(){
     return await launchesData.find({},{'_id':0,'__v':0});
 }
 
+async function getlatesFlightNumber(){
+    const latestNo = await launchesData.findOne().sort('-flightNumber');
+
+    if(!latestNo){
+        return DEFAULT_FLIGHTNUMBER;
+    }
+    return latestNo.flightNumber;
+}
 
 
-function addNewLaunches(launch){
-    latestFlightNumber++;
-    launches.set(latestFlightNumber,Object.assign(launch,{
+async function addNewLaunches(launch){
+    const latestFlightNumber = await  getlatesFlightNumber() +1
+    const newLaunch = Object.assign(launch,{
         upcoming:true,
         success:true,
-        customer:['DaDDy-chill','TASLA'],
         flightNumber:latestFlightNumber,
-    }));
+    });
+    await saveLaunch(newLaunch);
 }
 
 async function saveLaunch(launch){
