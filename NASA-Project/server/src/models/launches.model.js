@@ -5,14 +5,14 @@ const DEFAULT_FLIGHTNUMBER = 100;
 // const launches = new Map();
 // let latestFlightNumber = 100;
 const launch = {
-  flightNumber: 100, //exist
-  mission: "Exoplanets IS1", //exit
-  rocket: "USA1", //exit
-  target: "Kepler-442 b", //planets
-  launchDate: new Date("January 7,2030"), //exist
-  customer: ["DaDDy", "NASA"], //exist
-  upcoming: true, //exist
-  success: true, // exist
+  flightNumber: 100, //exist flight_number
+  mission: "Exoplanets IS1", //exit name
+  rocket: "USA1", //exit rocket
+  target: "Kepler-442 b", //planets 
+  launchDate: new Date("January 7,2030"), //exist date_utc
+  customer: ["DaDDy", "NASA"], //exist payloads.customers
+  upcoming: true, //exist upcoming
+  success: true, // exist success
 };
 
 saveLaunch(launch);
@@ -21,11 +21,20 @@ const SPACEX_URL = "https://api.spacexdata.com/v5/launches/latest";
 function loadLaunchData() {
   console.log("Data is loading....");
   const response = axios.post(SPACEX_URL, {
-    query: {},
-    options: {
-      pagination: false,
-      populate: {},
-    },
+    query:{},
+        options:{
+            pagination:false,
+            populate:[
+                {
+                    path:"rocket",
+                    name:1
+                },
+                {
+                    pat:"payloads",
+                    name:1
+                }
+            ]
+        }
   });
 }
 
