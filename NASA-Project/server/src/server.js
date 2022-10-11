@@ -1,8 +1,8 @@
+require('dotenv').config();
 const http = require('http');
-const os = require('os');
-const cluster = require('cluster');
 const app = require('./app');
-const {connectMongo} = require('./services/mongo')
+const {connectMongo} = require('./services/mongo');
+const {loadLaunchData} = require('./models/launches.model');
 const {loadData} = require('./models/planets.model');
 
 
@@ -13,6 +13,7 @@ const server = http.createServer(app);
 async function startServer(){
     await connectMongo();
     await loadData();
+    await loadLaunchData();
    server.listen(PORT,()=>{
     console.log(`Server is running on ${PORT}`)
     })

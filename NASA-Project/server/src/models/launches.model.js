@@ -1,45 +1,92 @@
-const axios = require("axois");
+const axios = require("axios");
 const launchesData = require("./launches.mongo");
 const planets = require("./planets.mongo");
 const DEFAULT_FLIGHTNUMBER = 100;
 // const launches = new Map();
 // let latestFlightNumber = 100;
-const launch = {
-  flightNumber: 100, //exist flight_number
-  mission: "Exoplanets IS1", //exit name
-  rocket: "USA1", //exit rocket
-  target: "Kepler-442 b", //planets 
-  launchDate: new Date("January 7,2030"), //exist date_utc
-  customer: ["DaDDy", "NASA"], //exist payloads.customers
-  upcoming: true, //exist upcoming
-  success: true, // exist success
-};
+// const launch = {
+//   flightNumber: 100, //exist flight_number
+//   mission: "Exoplanets IS1", //exit name
+//   rocket: "USA1", //exit rocket.name
+//   target: "Kepler-442 b", //planets 
+//   launchDate: new Date("January 7,2030"), //exist date_utc
+//   customer: ["DaDDy", "NASA"], //exist payloads.customers
+//   upcoming: true, //exist upcoming
+//   success: true, // exist success
+// };
 
-saveLaunch(launch);
+// saveLaunch(launch);
 
-const SPACEX_URL = "https://api.spacexdata.com/v5/launches/latest";
-function loadLaunchData() {
+const SPACEX_URL = "https://api.spacexdata.com/v5/launches/query";
+async function populateLaunch() {
   console.log("Data is loading....");
-  const response = axios.post(SPACEX_URL, {
+  const response = await axios.post(SPACEX_URL,{
     query:{},
-        options:{
+    options:{
             pagination:false,
             populate:[
                 {
                     path:"rocket",
-                    name:1
+                    select:{
+                      name:1,
+                    }
                 },
                 {
-                    pat:"payloads",
-                    name:1
+                    path:"payloads",
+                    select:{
+                      customers:1,
+                    }
                 }
             ]
         }
   });
+  if(response.status !== 200){
+    console.log('Some problems downloaded launch data')
+     throw new Error('Launch data downloaded fail')
+  }
+  const launchDocs = response.data.docs;
+  for(let launchDoc of launchDocs){
+    const payloads = launchDoc['payloads'];
+    const customer = payloads.flatMap(payload=> payload['customers']);
+      const launch = {
+    flightNumber:launchDoc['flight_number'],
+    mission:launchDoc['name'],
+    rocket:launchDoc['rocket']['name'],
+    target:'Kepler-442 b',
+    launchDate:launchDoc['date_local'],
+    upcoming:launchDoc['upcoming'],
+    success:launchDoc['success'],
+    customer,
+  }
+  // console.log(`${launch.flightNumber} && ${launch.mission}`);
+  await saveLaunch(launch)
+  }
+
 }
 
-async function getAllLaunches() {
-  return await launchesData.find({}, { _id: 0, __v: 0 });
+async function loadLaunchData(){
+  const firstLaunch = await findLaunchData({
+   flightNumber:1,
+    rocket:'Falcon 1',
+    mission:'FalconSat'
+  });
+  if(firstLaunch){
+    console.log('Data is already loaded')
+  }else{
+    await  populateLaunch()
+  }
+}
+
+async function findLaunchData(filter){
+  return await launchesData.findOne(filter);
+}
+
+async function getAllLaunches(skip,limit) {
+  return await launchesData
+  .find({}, { "_id": 0, "__v": 0 })
+  .sort({flightNumber:1})
+  .skip(skip)
+  .limit(limit);
 }
 
 async function getlatesFlightNumber() {
@@ -102,4 +149,5 @@ module.exports = {
   addNewLaunches,
   existLaunchId,
   abortLaunches,
+  loadLaunchData,
 };
