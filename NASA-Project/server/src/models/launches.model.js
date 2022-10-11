@@ -18,7 +18,7 @@ const DEFAULT_FLIGHTNUMBER = 100;
 // saveLaunch(launch);
 
 const SPACEX_URL = "https://api.spacexdata.com/v5/launches/query";
-async function loadLaunchData() {
+async function populateLaunch() {
   console.log("Data is loading....");
   const response = await axios.post(SPACEX_URL,{
     query:{},
@@ -27,20 +27,27 @@ async function loadLaunchData() {
             populate:[
                 {
                     path:"rocket",
-                    name:1,
+                    select:{
+                      name:1,
+                    }
                 },
                 {
                     path:"payloads",
-                    name:1,
+                    select:{
+                      customers:1,
+                    }
                 }
             ]
         }
   });
-  
+  if(response.status !== 200){
+    console.log('Some problems downloaded launch data')
+     throw new Error('Launch data downloaded fail')
+  }
   const launchDocs = response.data.docs;
   for(let launchDoc of launchDocs){
     const payloads = launchDoc['payloads'];
-    const customers = payloads.flatMap((payload)=> {return payload['customers']});
+    const customer = payloads.flatMap(payload=> payload['customers']);
       const launch = {
     flightNumber:launchDoc['flight_number'],
     mission:launchDoc['name'],
@@ -49,15 +56,37 @@ async function loadLaunchData() {
     launchDate:launchDoc['date_local'],
     upcoming:launchDoc['upcoming'],
     success:launchDoc['success'],
-    customers,
+    customer,
   }
-  console.log(`${launch.flightNumber} && ${launch.mission}`);
+  // console.log(`${launch.flightNumber} && ${launch.mission}`);
+  await saveLaunch(launch)
   }
 
 }
 
-async function getAllLaunches() {
-  return await launchesData.find({}, { _id: 0, __v: 0 });
+async function loadLaunchData(){
+  const firstLaunch = await findLaunchData({
+   flightNumber:1,
+    rocket:'Falcon 1',
+    mission:'FalconSat'
+  });
+  if(firstLaunch){
+    console.log('Data is already loaded')
+  }else{
+    await  populateLaunch()
+  }
+}
+
+async function findLaunchData(filter){
+  return await launchesData.findOne(filter);
+}
+
+async function getAllLaunches(skip,limit) {
+  return await launchesData
+  .find({}, { "_id": 0, "__v": 0 })
+  .sort({flightNumber:1})
+  .skip(skip)
+  .limit(limit);
 }
 
 async function getlatesFlightNumber() {
