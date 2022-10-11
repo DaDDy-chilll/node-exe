@@ -1,41 +1,59 @@
-const axios = require("axois");
+const axios = require("axios");
 const launchesData = require("./launches.mongo");
 const planets = require("./planets.mongo");
 const DEFAULT_FLIGHTNUMBER = 100;
 // const launches = new Map();
 // let latestFlightNumber = 100;
-const launch = {
-  flightNumber: 100, //exist flight_number
-  mission: "Exoplanets IS1", //exit name
-  rocket: "USA1", //exit rocket
-  target: "Kepler-442 b", //planets 
-  launchDate: new Date("January 7,2030"), //exist date_utc
-  customer: ["DaDDy", "NASA"], //exist payloads.customers
-  upcoming: true, //exist upcoming
-  success: true, // exist success
-};
+// const launch = {
+//   flightNumber: 100, //exist flight_number
+//   mission: "Exoplanets IS1", //exit name
+//   rocket: "USA1", //exit rocket.name
+//   target: "Kepler-442 b", //planets 
+//   launchDate: new Date("January 7,2030"), //exist date_utc
+//   customer: ["DaDDy", "NASA"], //exist payloads.customers
+//   upcoming: true, //exist upcoming
+//   success: true, // exist success
+// };
 
-saveLaunch(launch);
+// saveLaunch(launch);
 
-const SPACEX_URL = "https://api.spacexdata.com/v5/launches/latest";
-function loadLaunchData() {
+const SPACEX_URL = "https://api.spacexdata.com/v5/launches/query";
+async function loadLaunchData() {
   console.log("Data is loading....");
-  const response = axios.post(SPACEX_URL, {
+  const response = await axios.post(SPACEX_URL,{
     query:{},
-        options:{
+    options:{
             pagination:false,
             populate:[
                 {
                     path:"rocket",
-                    name:1
+                    name:1,
                 },
                 {
-                    pat:"payloads",
-                    name:1
+                    path:"payloads",
+                    name:1,
                 }
             ]
         }
   });
+  
+  const launchDocs = response.data.docs;
+  for(let launchDoc of launchDocs){
+    const payloads = launchDoc['payloads'];
+    const customers = payloads.flatMap((payload)=> {return payload['customers']});
+      const launch = {
+    flightNumber:launchDoc['flight_number'],
+    mission:launchDoc['name'],
+    rocket:launchDoc['rocket']['name'],
+    target:'Kepler-442 b',
+    launchDate:launchDoc['date_local'],
+    upcoming:launchDoc['upcoming'],
+    success:launchDoc['success'],
+    customers,
+  }
+  console.log(`${launch.flightNumber} && ${launch.mission}`);
+  }
+
 }
 
 async function getAllLaunches() {
@@ -102,4 +120,5 @@ module.exports = {
   addNewLaunches,
   existLaunchId,
   abortLaunches,
+  loadLaunchData,
 };
