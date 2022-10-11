@@ -1,7 +1,7 @@
 const async = require('hbs/lib/async');
 const mongoose = require('mongoose');
 
-const MOGO_URL = 'mongodb+srv://nasa-api:nasapi123@nasacluster.uvu3kll.mongodb.net/nasaexe?retryWrites=true&w=majority';
+const MOGO_URL = process.env.MOGO_API;
 mongoose.connection.once('open',()=>{
     console.log('Mongo is already connected')
 })
