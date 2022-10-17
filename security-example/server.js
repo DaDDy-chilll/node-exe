@@ -31,11 +31,17 @@ app.use(passport.initialize());
 app.get('/',(req,res)=>{
     res.sendFile(path.join(__dirname,'public','index.html'));
 });
-app.get('/auth/google',()=>{
+app.get('/auth/google',
     passport.authenticate('google',{scope:['email']})
-});
+);
 app.get('/auth/logout',()=>{});
-app.get('/auth/google/callback',()=>{});
+app.get('/auth/google/callback',
+    passport.authenticate('google',{
+        failureRedirect:'/failure',
+        successRedirect:'/',
+        session:false,
+    })
+);
 app.get('/failure');
 app.get('/secret',(req,res)=>{
     res.send('Your secret is 42!');
